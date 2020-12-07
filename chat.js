@@ -1,8 +1,7 @@
+
 var shareddatabase = firebase.database();
 
-var chatlimit = 1000;
-
-var database_refname = "simplechat-dev"
+var database_refname = "simplechat-dev-dt"
 
 $(document).ready(function() {
 
@@ -19,46 +18,66 @@ $(document).ready(function() {
     var data = {
       timestamp: Date.now(),
       name: $("#nameInput").val(),
-      text: $("#textInput").val()
+      text: $("#textInput").val(),
+      size: $("#sizeInput").val(),
+
+      color: $("#colorInput").val()
+
     };
 
-    $("#textInput").val("");
-    shareddatabase.ref(database_refname).push(data);
+    shareddatabase.ref(database_refname).push(data); // cchat
+    // shareddatabase.ref(database_refname).set(data); // set a single value
   }
 
-  var chatlimit = 1000;
+  var chatlimit = 10000;
 
   // when the database changes, change the website
-  shareddatabase
-    .ref(database_refname)
-    .orderByChild("timestamp")
-    .limitToLast(chatlimit)
-    .on("value", function(snapshot) {
-      var chats = snapshot.val();
+  shareddatabase.ref(database_refname)
+  .orderByChild("timestamp")
+  .limitToLast(chatlimit)
 
-      $(".chatcontainer").empty();
+  .on("value", function(snapshot) {
+    var data = snapshot.val();
 
-      var url;
+    $(".chatcontainer").empty();
 
-      for (k in chats) {
-       
-        var chatimghtml = ""
-        var imgregex =/(https?:\/\/.*\.(?:png|jpg|jpeg))/;
-        if( imgregex.test(chats[k].text) == true) {
-          var imgurl = chats[k].text.match(imgregex)[0];
-          chatimghtml = `<img class="chatimage" src="${imgurl}">`;
-        }
-        
 
-        $(".chatcontainer").append(`
-        <div class="messagecontainer">
-          <div class="messagename">${chats[k].name}</div>
-          <div class="messagetext"> ${chats[k].text}</div>
-          <div class="messageimg">${chatimghtml}</div>
-        </div>`);
-
+    var tally = {};
+    for (d in data) {
+      if (data[d]['name'] in tally) {
+        tally[data[d]['name']] += 1;
+      } else {
+        tally[data[d]['name']] = 1;
       }
+    }
 
-      $("#chattext").scrollTop($("#chattext")[0].scrollHeight);
-    });
+
+    for (d in data) {
+
+      console.log(data[d]['name']);
+      console.log(data[d]['size']);
+      console.log(data[d]['text']);
+      console.log(data[d]['color']);
+
+      //var tallystyle = "";
+      //if(tally[data[d]['name']] > 3) {
+      //  tallystyle = "background-color: yellow;"
+      //}
+
+      var tallystyle = "font-size: " + (5 / tally[data[d]['name']])  + "em;"
+
+
+
+      $(".chatcontainer").append(`
+        <div style="${tallystyle}  color: #${ data[d]['color'] }">${ data[d]['name'] } : ${ data[d]['text'] } </div>
+        `);
+
+
+
+    }
+
+
+  });
+
+
 });
